@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a3a5c">
+<meta name="format-detection" content="telephone=no">
+<title>トーク内容生成｜三条河原町店 料金計算</title>
+<style>
+  :root{
+    --bg:#eef2f7; --card:#ffffff; --ink:#1f2d3d; --sub:#5b6b7c; --sub2:#8696a8;
+    --accent:#1a6fb5; --accent2:#0e4d82; --gold:#b8860b; --line:#dde5ee; --line2:#eef2f7;
+    --ok:#e8f5e9; --okline:#2e7d32; --warn:#fff3cd; --warnline:#b8860b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "Segoe UI", Roboto, sans-serif;
+    background:var(--bg); color:var(--ink); padding:0 0 56px; line-height:1.65;
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    background:linear-gradient(135deg,#1a3a5c,#1a6fb5); color:#fff;
+    padding: env(safe-area-inset-top) 18px 18px; padding-top: max(env(safe-area-inset-top), 20px);
+    text-align:center;
+  }
+  header h1{margin:0; font-size:1.3rem; letter-spacing:.02em; font-weight:700;}
+  header p{margin:4px 0 0; font-size:.78rem; opacity:.88;}
+  main{max-width:680px; margin:0 auto; padding:14px 14px;}
+
+  /* 使い方ガイド（初回のみ自動表示・閉じるボタン付） */
+  .guide{
+    background:#fffbe6; border:1.5px solid #f0d97a; border-radius:14px;
+    padding:14px 16px; margin:0 0 14px; position:relative;
+  }
+  .guide h3{margin:0 0 8px; font-size:.95rem; color:#7a5b00; display:flex; align-items:center; gap:6px;}
+  .guide ol{margin:6px 0 0; padding-left:20px; font-size:.85rem; color:#5b4400; line-height:1.85;}
+  .guide ol b{color:#1a3a5c;}
+  .guide .close{
+    position:absolute; top:8px; right:10px; background:transparent; border:none;
+    color:#7a5b00; font-size:1.4rem; line-height:1; cursor:pointer; padding:6px 10px;
+  }
+  .guide.hidden{display:none;}
+
+  /* カード */
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin:0 0 14px; box-shadow:0 1px 3px rgba(20,40,70,.06);
+  }
+  .card h2{margin:0 0 4px; font-size:1.02rem; color:var(--accent2); display:flex; align-items:center; gap:8px;}
+  .card h2 .tag{
+    background:var(--accent); color:#fff; font-size:.68rem; padding:3px 9px;
+    border-radius:999px; letter-spacing:.05em; flex:none; font-weight:700;
+  }
+  .card .sub{font-size:.8rem; color:var(--sub); margin:0 0 12px;}
+
+  /* 入力 */
+  .field{margin:0 0 12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block; font-size:.85rem; color:var(--ink); margin:0 0 6px; font-weight:600;}
+  .req::after{content:"必須"; color:#c62828; font-size:.68rem; margin-left:6px; background:#fff3f3; padding:1px 6px; border-radius:4px; border:1px solid #e57373; vertical-align:1px;}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:8px;}
+  .num{
+    width:100%; text-align:center; font-size:1.15rem; font-weight:700;
+    appearance:none; -webkit-appearance:none; border:1.5px solid var(--line);
+    border-radius:10px; padding:14px 8px 12px; background:#fff; color:var(--ink);
+    font-family:inherit;
+  }
+  .num:focus{outline:none; border-color:var(--accent);}
+  .num.invalid{border-color:#e57373; background:#fff5f5;}
+  .num-btn{
+    display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;
+  }
+  .num-btn button{
+    padding:8px; font-size:.9rem; font-weight:700;
+    background:var(--line2); border:1px solid var(--line); border-radius:8px;
+    color:var(--ink); cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  .num-btn button:active{background:var(--accent); color:#fff;}
+  /* select */
+  select{
+    width:100%; appearance:none; -webkit-appearance:none;
+    border:1.5px solid var(--line); border-radius:10px;
+    padding:14px 32px 14px 12px; background:#fff; color:var(--ink);
+    font-size:1rem; font-family:inherit; line-height:1.4;
+    background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235b6b7c' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center;
+  }
+  select:focus{outline:none; border-color:var(--accent);}
+  .hint{font-size:.74rem; color:var(--sub2); margin-top:5px;}
+  .room-group{
+    display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;
+  }
+  .room-group .chip{
+    padding:8px 12px; border:1.5px solid var(--line); border-radius:999px;
+    background:#fff; font-size:.85rem; font-weight:700; cursor:pointer;
+    -webkit-user-select:none; user-select:none;
+  }
+  .room-group .chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .room-group .chip:active{transform:scale(.97);}
+
+  /* ボタン */
+  .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;}
+  .btn{
+    display:block; padding:16px; font-size:1.05rem;
+    font-weight:700; color:#fff; background:linear-gradient(135deg,#1a6fb5,#0e4d82);
+    border:none; border-radius:12px; cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  .btn:active{transform:scale(.99);}
+  .btn.secondary{background:linear-gradient(135deg,#e8eef5,#dde5ee); color:var(--accent2);}
+  .btn.copied{background:linear-gradient(135deg,#2e7d32,#1b5e20);}
+
+  /* 結果 */
+  .result{
+    background:linear-gradient(135deg,#fdf8ec,#fdf3d7); border:1.5px solid var(--gold);
+    border-radius:14px; padding:16px; margin-top:14px;
+  }
+  .result.disabled{background:#f4f6f9; border-color:var(--line);}
+  .result h2{margin:0 0 6px; font-size:1.02rem; color:var(--gold);}
+  .result.disabled h2{color:var(--sub);}
+  .result-meta{font-size:.78rem; color:var(--sub); margin:0 0 12px; line-height:1.6;}
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:520px){.two{grid-template-columns:1fr;}}
+  .talk{
+    background:#fff; border:1px solid #eed9a0; border-radius:10px;
+    padding:12px 14px; font-size:1rem; white-space:pre-wrap; margin:0 0 8px; line-height:1.8;
+  }
+  .breakdown{
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; font-size:.82rem; color:var(--sub); line-height:1.85;
+  }
+  .breakdown .total{font-size:1.15rem; font-weight:800; color:var(--accent2); display:block; margin-top:4px;}
+  .copy-row{margin-top:6px;}
+  .copy-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:10px 14px; font-size:.9rem; font-weight:700;
+    background:#fff; border:1.5px solid var(--accent); color:var(--accent);
+    border-radius:10px; cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  .copy-btn:active{background:var(--accent); color:#fff;}
+
+  /* 未入力時の警告 */
+  .warn{
+    background:#fff3f3; border:1.5px solid #e57373; border-radius:12px;
+    padding:14px 16px; margin-top:10px; color:#c62828; font-weight:700;
+    font-size:.95rem; display:none;
+  }
+  .warn .icon{margin-right:6px;}
+  .warn ul{margin:6px 0 0; padding-left:20px; font-size:.85rem; font-weight:500; color:#a53636;}
+
+  footer{text-align:center; color:var(--sub2); font-size:.72rem; padding:14px 8px 4px; line-height:1.7;}
+
+  /* 年齢層トグル */
+  .age-toggle{display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;}
+  .age-toggle .chip{
+    font-size:.82rem; padding:8px 12px; border:1.5px solid var(--line);
+    border-radius:999px; background:#fff; cursor:pointer; -webkit-user-select:none; user-select:none;
+  }
+  .age-toggle .chip.active{background:var(--accent2); color:#fff; border-color:var(--accent2);}
+
+  /* スマホでは太め、押しやすく */
+  @media (max-width:380px){
+    .grid4{grid-template-columns:repeat(2,1fr);}
+    header h1{font-size:1.2rem;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>トーク内容生成</h1>
+  <p>三条河原町店 料金計算（人数・時間・部屋・コースを入れるだけ）</p>
+</header>
+<main>
+
+<div class="guide" id="guide">
+  <button class="close" aria-label="閉じる" onclick="document.getElementById('guide').classList.add('hidden')">×</button>
+  <h3>👋 はじめての方へ（3ステップ）</h3>
+  <ol>
+    <li><b>人数</b>を入れる（会員学生・学生・会員・一般 の4つの枠）</li>
+    <li><b>利用時間</b>・<b>部屋</b>・<b>コース2つ</b>を選ぶ</li>
+    <li>下の <b>「トーク内容を表示」</b>を押すと <b>おすすめ文章＋内訳</b>が出ます</li>
+  </ol>
+  <div style="font-size:.78rem;color:#7a5b00;margin-top:8px">💡 <b>※</b> このページは電波の届かない店内でも動きます（ネット不要）。URLを送るだけで誰にでも共有できます。</div>
+</div>
+
+<div class="card">
+  <h2><span class="tag">1</span>人数</h2>
+  <div class="sub">区分ごとに人数を入れてください（0〜33名）</div>
+  <div class="grid4">
+    <div class="field">
+      <label class="req" for="c0">会員学生</label>
+      <input class="num" id="c0" type="number" min="0" max="33" value="0" inputmode="numeric">
+      <div class="num-btn"><button onclick="bump(0,-1)">−</button><button onclick="bump(0,1)">＋</button></div>
+    </div>
+    <div class="field">
+      <label class="req" for="c1">学生</label>
+      <input class="num" id="c1" type="number" min="0" max="33" value="0" inputmode="numeric">
+      <div class="num-btn"><button onclick="bump(1,-1)">−</button><button onclick="bump(1,1)">＋</button></div>
+    </div>
+    <div class="field">
+      <label class="req" for="c2">会員</label>
+      <input class="num" id="c2" type="number" min="0" max="33" value="0" inputmode="numeric">
+      <div class="num-btn"><button onclick="bump(2,-1)">−</button><button onclick="bump(2,1)">＋</button></div>
+    </div>
+    <div class="field">
+      <label class="req" for="c3">一般</label>
+      <input class="num" id="c3" type="number" min="0" max="33" value="0" inputmode="numeric">
+      <div class="num-btn"><button onclick="bump(3,-1)">−</button><button onclick="bump(3,1)">＋</button></div>
+    </div>
+  </div>
+  <div class="hint">よく使う構成：<b>年代</b>ボタンで人数区分に自動振り分け（下に説明）
+    <div class="age-toggle" role="group" aria-label="人数クイック設定">
+      <span class="chip" onclick="quickSet([0,1,0,0])">学生のみ 1名</span>
+      <span class="chip" onclick="quickSet([0,0,1,0])">会員のみ 1名</span>
+      <span class="chip" onclick="quickSet([0,0,0,1])">一般のみ 1名</span>
+      <span class="chip" onclick="quickSet([0,2,0,0])">学生 2名</span>
+      <span class="chip" onclick="quickSet([0,0,2,0])">会員 2名</span>
+      <span class="chip" onclick="quickSet([0,0,0,2])">一般 2名</span>
+      <span class="chip" onclick="resetAll()">リセット</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="tag">2</span>利用時間・部屋</h2>
+  <div class="sub">0.5時間刻み、または フリータイム（昼FT〜ナイトパック）から選んでください</div>
+  <div class="field">
+    <label for="time" class="req">利用時間（時間帯）</label>
+    <select id="time" aria-label="利用時間"></select>
+    <div class="hint">0.5〜3.5h は時間制（30分ごとに加算）／FT系は定額フリータイム</div>
+  </div>
+  <div class="field">
+    <label for="room" class="req">部屋番号</label>
+    <select id="room" aria-label="部屋番号"></select>
+    <div class="hint">101〜515号室。部屋ごとに 時間制/FT のコンセプト料金が自動で加算されます</div>
+  </div>
+  <div class="field">
+    <label for="snmode">時間帯の判定（上書きしたいとき）</label>
+    <select id="snmode" aria-label="SN判定">
+      <option value="auto">自動（現在の時刻で判定）</option>
+      <option value="S">S（昼気分の料金帯）に強制</option>
+      <option value="N">N（夜気分の料金帯）に強制</option>
+    </select>
+    <div class="hint">通常は「自動」のままでOK。深夜帯などで料金帯を手動で切り替えたいときに変更してください</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="tag">3</span>コース</h2>
+  <div class="sub">おすすめ①と比較用②の2つを並べて表示します</div>
+  <div class="grid2">
+    <div class="field">
+      <label for="cs1" class="req">コース①（おすすめ）</label>
+      <select id="cs1" aria-label="コース①"></select>
+    </div>
+    <div class="field">
+      <label for="cs2">コース②（比較用）</label>
+      <select id="cs2" aria-label="コース②"></select>
+    </div>
+  </div>
+  <div class="hint">ボトル／プレミアム／バリュー／カジュアル／スタンダード から選べます</div>
+</div>
+
+<div class="actions">
+  <button class="btn" id="calc">トーク内容を表示</button>
+  <button class="btn secondary" id="reset" type="button">入力リセット</button>
+</div>
+
+<div class="warn" id="warn" role="alert">
+  <span class="icon">⚠️</span> 以下の項目を入力してください：
+  <ul id="warnList"></ul>
+</div>
+
+<div class="card result disabled" id="result" aria-live="polite">
+  <h2>トーク内容</h2>
+  <div class="result-meta" id="resultMeta">まだ計算されていません</div>
+  <div class="two">
+    <div>
+      <div class="sub" style="margin:0 0 4px;color:var(--accent2);font-weight:700">コース① <span id="n1"></span></div>
+      <div class="talk" id="talk1">—</div>
+      <div class="breakdown" id="bd1">—</div>
+      <div class="copy-row"><button class="copy-btn" data-copy="talk1">📋 文章をコピー</button></div>
+    </div>
+    <div>
+      <div class="sub" style="margin:0 0 4px;color:var(--accent2);font-weight:700">コース② <span id="n2"></span></div>
+      <div class="talk" id="talk2">—</div>
+      <div class="breakdown" id="bd2">—</div>
+      <div class="copy-row"><button class="copy-btn" data-copy="talk2">📋 文章をコピー</button></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<footer>
+  ブラウザだけで動作（ネット接続不要）<br>
+  ホーム画面に追加するとアプリのように使えます（iPhone：「共有」→「ホーム画面に追加」／Android：「メニュー」→「アプリをインストール」）
+</footer>
+
+<script>
+var DATA = {"rate": {"昼": {"平日": [130, 160, 200, 320], "週末": [190, 200, 280, 410]}, "夜": {"平日": [240, 275, 390, 560], "週末": [290, 375, 440, 630]}, "昼FT": {"平日": [820, 970, 900, 1490], "週末": [1210, 1310, 1410, 1930]}, "夕方FT": {"平日": [990, 1175, 1290, 1790], "週末": [1290, 1375, 1580, 2080]}, "夜FT": {"平日": [850, 1190, 1375, 2090], "週末": [1290, 1640, 1680, 2290]}, "深夜FT": {"平日": [830, 1090, 1340, 1830], "週末": [1240, 1470, 1810, 2470]}, "ナイトパック": {"平日": [1270, 1470, 1810, 2470], "週末": [1670, 2010, 2210, 2880]}}, "wday": {"土曜日": {"S": "週末", "N": "週末", "昼FT": "週末", "夕方FT": "週末", "夜FT": "週末", "深夜FT": "週末", "ナイトパック": "週末"}, "日曜日": {"S": "週末", "N": "週末", "昼FT": "週末", "夕方FT": "週末", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "月曜日": {"S": "平日", "N": "平日", "昼FT": "平日", "夕方FT": "平日", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "火曜日": {"S": "平日", "N": "平日", "昼FT": "平日", "夕方FT": "平日", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "水曜日": {"S": "平日", "N": "平日", "昼FT": "平日", "夕方FT": "平日", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "木曜日": {"S": "平日", "N": "平日", "昼FT": "平日", "夕方FT": "平日", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "金曜日": {"S": "平日", "N": "週末", "昼FT": "平日", "夕方FT": "週末", "夜FT": "週末", "深夜FT": "週末", "ナイトパック": "週末"}, "祝日の前日": {"S": "平日", "N": "週末", "昼FT": "平日", "夕方FT": "週末", "夜FT": "週末", "深夜FT": "週末", "ナイトパック": "週末"}, "祝日(翌日通常)": {"S": "週末", "N": "週末", "昼FT": "週末", "夕方FT": "週末", "夜FT": "平日", "深夜FT": "平日", "ナイトパック": "平日"}, "祝日(翌日通外)": {"S": "週末", "N": "週末", "昼FT": "週末", "夕方FT": "週末", "夜FT": "週末", "深夜FT": "週末", "ナイトパック": "週末"}}, "sn": {"10": "S", "11": "S", "12": "S", "13": "S", "14": "S", "15": "S", "16": "S", "17": "S", "18": "S", "19": "N", "20": "N", "21": "N", "22": "N", "23": "N", "0": "N", "1": "N", "2": "N", "3": "N", "4": "N", "5": "N", "6": "N", "7": "N", "8": "S", "9": "S"}, "yobi": {"2026-08-01": "土曜日", "2026-08-02": "日曜日", "2026-08-03": "月曜日", "2026-08-04": "火曜日", "2026-08-05": "水曜日", "2026-08-06": "木曜日", "2026-08-07": "金曜日", "2026-08-08": "土曜日", "2026-08-09": "日曜日", "2026-08-10": "祝日の前日", "2026-08-11": "祝日(翌日通常)", "2026-08-12": "水曜日", "2026-08-13": "木曜日", "2026-08-14": "金曜日", "2026-08-15": "土曜日", "2026-08-16": "日曜日", "2026-08-17": "月曜日", "2026-08-18": "火曜日", "2026-08-19": "水曜日", "2026-08-20": "木曜日", "2026-08-21": "金曜日", "2026-08-22": "土曜日", "2026-08-23": "日曜日", "2026-08-24": "月曜日", "2026-08-25": "火曜日", "2026-08-26": "水曜日", "2026-08-27": "木曜日", "2026-08-28": "金曜日", "2026-08-29": "土曜日", "2026-08-30": "日曜日", "2026-08-31": "月曜日", "2026-09-01": "火曜日", "2026-09-02": "水曜日", "2026-09-03": "木曜日", "2026-09-04": "金曜日", "2026-09-05": "土曜日", "2026-09-06": "日曜日", "2026-09-07": "月曜日", "2026-09-08": "火曜日", "2026-09-09": "水曜日", "2026-09-10": "木曜日", "2026-09-11": "金曜日", "2026-09-12": "土曜日", "2026-09-13": "日曜日", "2026-09-14": "月曜日", "2026-09-15": "火曜日", "2026-09-16": "水曜日", "2026-09-17": "木曜日", "2026-09-18": "金曜日", "2026-09-19": "土曜日", "2026-09-20": "祝日(翌日通外)", "2026-09-21": "祝日(翌日通外)", "2026-09-22": "祝日(翌日通外)", "2026-09-23": "祝日(翌日通常)", "2026-09-24": "木曜日", "2026-09-25": "金曜日", "2026-09-26": "土曜日", "2026-09-27": "日曜日", "2026-09-28": "月曜日", "2026-09-29": "火曜日", "2026-09-30": "水曜日", "2026-10-01": "木曜日", "2026-10-02": "金曜日", "2026-10-03": "土曜日", "2026-10-04": "日曜日", "2026-10-05": "月曜日", "2026-10-06": "火曜日", "2026-10-07": "水曜日", "2026-10-08": "木曜日", "2026-10-09": "金曜日", "2026-10-10": "土曜日", "2026-10-11": "祝日(翌日通外)", "2026-10-12": "祝日(翌日通常)", "2026-10-13": "火曜日", "2026-10-14": "水曜日", "2026-10-15": "木曜日", "2026-10-16": "金曜日", "2026-10-17": "土曜日", "2026-10-18": "日曜日", "2026-10-19": "月曜日", "2026-10-20": "火曜日", "2026-10-21": "水曜日", "2026-10-22": "木曜日", "2026-10-23": "金曜日", "2026-10-24": "土曜日", "2026-10-25": "日曜日", "2026-10-26": "月曜日", "2026-10-27": "火曜日", "2026-10-28": "水曜日", "2026-10-29": "木曜日", "2026-10-30": "金曜日", "2026-10-31": "土曜日", "2026-11-01": "日曜日", "2026-11-02": "祝日の前日", "2026-11-03": "祝日(翌日通常)", "2026-11-04": "水曜日", "2026-11-05": "木曜日", "2026-11-06": "金曜日", "2026-11-07": "土曜日", "2026-11-08": "日曜日", "2026-11-09": "月曜日", "2026-11-10": "火曜日", "2026-11-11": "水曜日", "2026-11-12": "木曜日", "2026-11-13": "金曜日", "2026-11-14": "土曜日", "2026-11-15": "日曜日", "2026-11-16": "月曜日", "2026-11-17": "火曜日", "2026-11-18": "水曜日", "2026-11-19": "木曜日", "2026-11-20": "金曜日", "2026-11-21": "土曜日", "2026-11-22": "祝日(翌日通外)", "2026-11-23": "祝日(翌日通常)", "2026-11-24": "火曜日", "2026-11-25": "水曜日", "2026-11-26": "木曜日", "2026-11-27": "金曜日", "2026-11-28": "土曜日", "2026-11-29": "日曜日", "2026-11-30": "月曜日", "2026-12-01": "火曜日", "2026-12-02": "水曜日", "2026-12-03": "木曜日", "2026-12-04": "金曜日", "2026-12-05": "土曜日", "2026-12-06": "日曜日", "2026-12-07": "月曜日", "2026-12-08": "火曜日", "2026-12-09": "水曜日", "2026-12-10": "木曜日", "2026-12-11": "金曜日", "2026-12-12": "土曜日", "2026-12-13": "日曜日", "2026-12-14": "月曜日", "2026-12-15": "火曜日", "2026-12-16": "水曜日", "2026-12-17": "木曜日", "2026-12-18": "金曜日", "2026-12-19": "土曜日", "2026-12-20": "日曜日", "2026-12-21": "月曜日", "2026-12-22": "火曜日", "2026-12-23": "水曜日", "2026-12-24": "木曜日", "2026-12-25": "金曜日", "2026-12-26": "土曜日", "2026-12-27": "日曜日", "2026-12-28": "月曜日", "2026-12-29": "火曜日", "2026-12-30": "水曜日", "2026-12-31": "祝日の前日"}, "hitori": {"土曜日": {"S": 100, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}, "日曜日": {"S": 100, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}, "月曜日": {"S": 70, "N": 0, "昼FT": 400, "夕方FT": 400, "夜FT": 0, "深夜FT": 0}, "火曜日": {"S": 70, "N": 0, "昼FT": 400, "夕方FT": 400, "夜FT": 0, "深夜FT": 0}, "水曜日": {"S": 70, "N": 0, "昼FT": 400, "夕方FT": 400, "夜FT": 0, "深夜FT": 0}, "木曜日": {"S": 70, "N": 0, "昼FT": 400, "夕方FT": 400, "夜FT": 0, "深夜FT": 0}, "金曜日": {"S": 70, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}, "祝日の前日": {"S": 70, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}, "祝日(翌日通常)": {"S": 100, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}, "祝日(翌日通外)": {"S": 100, "N": 100, "昼FT": 400, "夕方FT": 400, "夜FT": 400, "深夜FT": 400}}, "rooms": {"101": {"時間制": 0, "FT": 0}, "102": {"時間制": 0, "FT": 0}, "103": {"時間制": 0, "FT": 0}, "104": {"時間制": 0, "FT": 0}, "105": {"時間制": 0, "FT": 0}, "106": {"時間制": 30, "FT": 200}, "107": {"時間制": 0, "FT": 0}, "108": {"時間制": 0, "FT": 0}, "201": {"時間制": 80, "FT": 400}, "202": {"時間制": 50, "FT": 300}, "203": {"時間制": 30, "FT": 150}, "204": {"時間制": 30, "FT": 150}, "205": {"時間制": 0, "FT": 0}, "206": {"時間制": 0, "FT": 0}, "207": {"時間制": 0, "FT": 0}, "208": {"時間制": 0, "FT": 0}, "209": {"時間制": 0, "FT": 0}, "210": {"時間制": 0, "FT": 0}, "211": {"時間制": 0, "FT": 0}, "212": {"時間制": 0, "FT": 0}, "213": {"時間制": 0, "FT": 0}, "214": {"時間制": 0, "FT": 0}, "215": {"時間制": 0, "FT": 0}, "301": {"時間制": 50, "FT": 300}, "302": {"時間制": 0, "FT": 0}, "303": {"時間制": 0, "FT": 0}, "304": {"時間制": 0, "FT": 0}, "305": {"時間制": 0, "FT": 0}, "306": {"時間制": 0, "FT": 0}, "307": {"時間制": 0, "FT": 0}, "308": {"時間制": 0, "FT": 0}, "309": {"時間制": 0, "FT": 0}, "310": {"時間制": 30, "FT": 150}, "311": {"時間制": 0, "FT": 0}, "312": {"時間制": 0, "FT": 0}, "313": {"時間制": 0, "FT": 0}, "401": {"時間制": 0, "FT": 0}, "402": {"時間制": 0, "FT": 0}, "403": {"時間制": 0, "FT": 0}, "404": {"時間制": 0, "FT": 0}, "405": {"時間制": 0, "FT": 0}, "406": {"時間制": 0, "FT": 0}, "407": {"時間制": 0, "FT": 0}, "408": {"時間制": 0, "FT": 0}, "409": {"時間制": 0, "FT": 0}, "410": {"時間制": 0, "FT": 0}, "411": {"時間制": 0, "FT": 0}, "412": {"時間制": 0, "FT": 0}, "413": {"時間制": 0, "FT": 0}, "414": {"時間制": 0, "FT": 0}, "415": {"時間制": 0, "FT": 0}, "416": {"時間制": 0, "FT": 0}, "501": {"時間制": 0, "FT": 0}, "502": {"時間制": 0, "FT": 0}, "503": {"時間制": 0, "FT": 0}, "504": {"時間制": 0, "FT": 0}, "505": {"時間制": 0, "FT": 0}, "506": {"時間制": 0, "FT": 0}, "507": {"時間制": 0, "FT": 0}, "508": {"時間制": 0, "FT": 0}, "509": {"時間制": 0, "FT": 0}, "510": {"時間制": 0, "FT": 0}, "511": {"時間制": 0, "FT": 0}, "512": {"時間制": 0, "FT": 0}, "513": {"時間制": 0, "FT": 0}, "514": {"時間制": 0, "FT": 0}, "515": {"時間制": 0, "FT": 0}}, "courses": {"ボトル": {"FT": 3330, "0.5": 400, "1": 2500, "1.5": 2500, "2": 2500, "2.5": 2900, "3": 3300, "3.5": 3700, "ナイトパック": 3330, "説明": "アルコール"}, "プレミアム": {"FT": 2430, "0.5": 400, "1": 800, "1.5": 1200, "2": 1600, "2.5": 2000, "3": 2400, "3.5": 2800, "ナイトパック": 2430, "説明": "ドリンクメニューのアルコール"}, "バリュー": {"FT": 2230, "0.5": 350, "1": 700, "1.5": 1050, "2": 1400, "2.5": 1750, "3": 2100, "3.5": 2450, "ナイトパック": 2230, "説明": "一部のアルコール"}, "カジュアル": {"FT": 880, "0.5": 190, "1": 380, "1.5": 570, "2": 760, "2.5": 950, "3": 1140, "3.5": 1330, "ナイトパック": 880, "説明": "当店のソフトドリンク全て"}, "スタンダード": {"FT": 0, "0.5": 0, "1": 0, "1.5": 0, "2": 0, "2.5": 0, "3": 0, "3.5": 0, "ナイトパック": 0, "説明": "ドリンクバー"}}, "room_list": [101, 102, 103, 104, 105, 106, 107, 108, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515], "course_list": ["ボトル", "プレミアム", "バリュー", "カジュアル", "スタンダード"], "time_options": ["0.5", "1", "1.5", "2", "2.5", "3", "3.5", "昼FT", "夕方FT", "夜FT", "深夜FT", "ナイトパック"]};
+
+var rateKey = {S:'昼', N:'夜', '昼FT':'昼FT','夕方FT':'夕方FT','夜FT':'夜FT','深夜FT':'深夜FT','ナイトパック':'ナイトパック'};
+var weekdayJP = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function dayLabel(d){
+  var key = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  return DATA.yobi[key] || weekdayJP[d.getDay()];
+}
+function bandFor(hour){ return DATA.sn[String(hour)] || 'N'; }
+
+function readCounts(){
+  return [0,1,2,3].map(function(i){
+    var v = parseInt(document.getElementById('c'+i).value, 10);
+    if (isNaN(v)) return 0;
+    return Math.max(0, Math.min(33, v));
+  });
+}
+
+function calc(){
+  var counts = readCounts();
+  var timeVal = document.getElementById('time').value;
+  var room = document.getElementById('room').value;
+  var c1 = document.getElementById('cs1').value;
+  var c2 = document.getElementById('cs2').value;
+  var snMode = document.getElementById('snmode').value;
+
+  var isNum = !isNaN(parseFloat(timeVal));
+  var now = new Date();
+  var d = new Date(now);
+  if (now.getHours() <= 5) d.setDate(d.getDate() - 1);
+  var label = dayLabel(d);
+  var hour = now.getHours();
+  var autoBand = bandFor(hour);
+  var band = isNum ? (snMode === 'auto' ? autoBand : snMode) : timeVal;
+  var wd = DATA.wday[label][band];
+  var rr = DATA.rate[rateKey[band]][wd];
+  var mult = isNum ? (parseFloat(timeVal) / 0.5) : 1;
+  var roomFee = counts.reduce(function(s, ct, i){ return s + rr[i] * ct * mult; }, 0);
+  var cp1 = isNum ? DATA.courses[c1][timeVal] : DATA.courses[c1]['FT'];
+  var cp2 = isNum ? DATA.courses[c2][timeVal] : DATA.courses[c2]['FT'];
+  var people = counts.reduce(function(a, b){ return a + b; }, 0);
+  var single = people === 1 ? (DATA.hitori[label][band] || 0) : 0;
+  var roomType = band.indexOf('FT') >= 0 ? 'FT' : '時間制';
+  var concept = (DATA.rooms[room] || {})[roomType] || 0;
+  var t1 = roomFee + cp1 + single + concept;
+  var t2 = roomFee + cp2 + single + concept;
+  var talk1 = '只今のお時間、' + DATA.courses[c1]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t1 + '円のものがおすすめですが、いかがなさいますか？';
+  var talk2 = '只今のお時間、' + DATA.courses[c2]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t2 + '円のものがおすすめですが、いかがなさいますか？';
+  return {counts:counts, timeVal:timeVal, room:room, c1:c1, c2:c2, band:band, wd:wd, label:label,
+          roomFee:roomFee, cp1:cp1, cp2:cp2, single:single, concept:concept, t1:t1, t2:t2, talk1:talk1, talk2:talk2};
+}
+
+function yen(n){ return n.toLocaleString('ja-JP'); }
+
+// UI ヘルパ
+function bump(i, delta){
+  var el = document.getElementById('c'+i);
+  var v = parseInt(el.value,10) || 0;
+  v = Math.max(0, Math.min(33, v + delta));
+  el.value = v;
+  doCalc();
+}
+function quickSet(arr){
+  arr.forEach(function(v,i){ document.getElementById('c'+i).value = v; });
+  doCalc();
+}
+function resetAll(){
+  [0,1,2,3].forEach(function(i){ document.getElementById('c'+i).value = 0; });
+  // セレクト類は初期値のまま
+  document.getElementById('time').selectedIndex = 0;
+  document.getElementById('room').selectedIndex = 0;
+  document.getElementById('snmode').value = 'auto';
+  if (DATA.course_list.length > 0){
+    document.getElementById('cs1').value = DATA.course_list[0];
+    document.getElementById('cs2').value = DATA.course_list[1] || DATA.course_list[0];
+  }
+  doCalc();
+  // 結果欄を空に
+  document.getElementById('result').className = 'card result disabled';
+  document.getElementById('resultMeta').textContent = 'まだ計算されていません';
+  document.getElementById('talk1').textContent = '—';
+  document.getElementById('bd1').innerHTML = '—';
+  document.getElementById('n1').textContent = '';
+  document.getElementById('talk2').textContent = '—';
+  document.getElementById('bd2').innerHTML = '—';
+  document.getElementById('n2').textContent = '';
+}
+
+function doCalc(){
+  var counts = readCounts();
+  var people = counts.reduce(function(a,b){return a+b;},0);
+  var timeVal = document.getElementById('time').value;
+  var room = document.getElementById('room').value;
+  var c1 = document.getElementById('cs1').value;
+  var c2 = document.getElementById('cs2').value;
+  var snMode = document.getElementById('snmode').value;
+
+  // 必須項目の未入力チェック
+  var missing = [];
+  if (people === 0) missing.push('人数（区分ごとの人数）');
+  if (!timeVal) missing.push('利用時間');
+  if (!room) missing.push('部屋番号');
+  if (!c1) missing.push('コース①');
+
+  var warn = document.getElementById('warn');
+  if (missing.length){
+    warn.style.display = 'block';
+    document.getElementById('warnList').innerHTML = missing.map(function(m){return '<li>'+m+'</li>';}).join('');
+    // 結果欄は無効化
+    var r0 = document.getElementById('result');
+    r0.className = 'card result disabled';
+    document.getElementById('resultMeta').textContent = '⚠️ 必須項目を入力すると表示されます';
+    return;
+  }
+  warn.style.display = 'none';
+
+  var r = calc();
+  function bd(cp, t){
+    var s = [];
+    s.push('ルーム料金：' + yen(r.roomFee) + '円');
+    if (r.single > 0) s.push('ひとり料金：' + yen(r.single) + '円');
+    if (r.concept > 0) s.push('コンセプト料金：' + yen(r.concept) + '円');
+    s.push('コース料金：' + yen(cp) + '円');
+    return s.join('<br>') + '<span class="total">合計 ' + yen(t) + '円</span>';
+  }
+  document.getElementById('result').className = 'card result';
+  var metaText = '📅 判定：' + r.label + '（' + r.wd + '） ／ 🕐 時間帯：' + r.band + ' ／ 👥 人数：' + people + '名 ／ 🚪 部屋：' + r.room + '号室 ／ ⏱ 利用時間：' + r.timeVal;
+  document.getElementById('resultMeta').textContent = metaText;
+  document.getElementById('n1').textContent = r.c1;
+  document.getElementById('n2').textContent = r.c2;
+  document.getElementById('talk1').textContent = r.talk1;
+  document.getElementById('talk2').textContent = r.talk2;
+  document.getElementById('bd1').innerHTML = bd(r.cp1, r.t1);
+  document.getElementById('bd2').innerHTML = bd(r.cp2, r.t2);
+
+  // 結果へスクロール（初回のみ）
+  if (!window._resultSeen){
+    window._resultSeen = true;
+  }
+}
+
+function copyText(srcId, btn){
+  var text = document.getElementById(srcId).textContent.trim();
+  // textContent は \n をそのまま保持しているので、\n を実改行へ
+  text = text.replace(/\n/g, String.fromCharCode(10));
+  var done = function(){
+    var orig = btn.textContent;
+    btn.textContent = '✅ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){
+      fallbackCopy(text); done();
+    });
+  } else {
+    fallbackCopy(text); done();
+  }
+}
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// 初期化
+(function(){
+  var timeSel = document.getElementById('time');
+  DATA.time_options.forEach(function(t){
+    var o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    timeSel.appendChild(o);
+  });
+  var roomSel = document.getElementById('room');
+  DATA.room_list.forEach(function(n){
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n + '号室';
+    roomSel.appendChild(o);
+  });
+  var s1 = document.getElementById('cs1');
+  var s2 = document.getElementById('cs2');
+  DATA.course_list.forEach(function(n){
+    var o1 = document.createElement('option'); o1.value = n; o1.textContent = n; s1.appendChild(o1);
+    var o2 = document.createElement('option'); o2.value = n; o2.textContent = n; s2.appendChild(o2);
+  });
+  if (DATA.course_list.length > 1) s2.value = DATA.course_list[1];
+
+  // リアルタイム再計算
+  ['c0','c1','c2','c3','time','room','snmode','cs1','cs2'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('change', doCalc);
+    el.addEventListener('input', doCalc);
+  });
+
+  document.getElementById('calc').addEventListener('click', doCalc);
+  document.getElementById('reset').addEventListener('click', resetAll);
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      copyText(btn.getAttribute('data-copy'), btn);
+    });
+  });
+
+  // 初回は何も計算しない（必須未入力の状態を見せる）
+  warn.style.display = 'block';
+  document.getElementById('warnList').innerHTML = '<li>人数（区分ごとの人数）</li><li>利用時間</li><li>部屋番号</li><li>コース①</li>';
+})();
+</script>
+</body>
+</html>
