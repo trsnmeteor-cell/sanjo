@@ -344,9 +344,9 @@ function calc(){
   var cp1 = isNum ? DATA.courses[c1][timeVal] : DATA.courses[c1]['FT'];
   var cp2 = isNum ? DATA.courses[c2][timeVal] : DATA.courses[c2]['FT'];
   var people = counts.reduce(function(a, b){ return a + b; }, 0);
-  var single = people === 1 ? (DATA.hitori[label][band] || 0) : 0;
+  var single = people === 1 ? (DATA.hitori[label][band] || 0) * mult : 0;
   var roomType = band.indexOf('FT') >= 0 ? 'FT' : '時間制';
-  var concept = (DATA.rooms[room] || {})[roomType] || 0;
+  var concept = ((DATA.rooms[room] || {})[roomType] || 0) * mult;
   var t1 = roomFee + cp1 + single + concept;
   var t2 = roomFee + cp2 + single + concept;
   var talk1 = '只今のお時間、' + DATA.courses[c1]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t1 + '円のものがおすすめですが、いかがなさいますか？';
