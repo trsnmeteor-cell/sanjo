@@ -349,7 +349,7 @@ function calc(){
   var cp2 = (isNum ? DATA.courses[c2][timeVal] : DATA.courses[c2]['FT']) * people;
   var single = people === 1 ? (DATA.hitori[label][band] || 0) * mult : 0;
   var roomType = band.indexOf('FT') >= 0 ? 'FT' : '時間制';
-  var concept = ((DATA.rooms[room] || {})[roomType] || 0) * mult;
+  var concept = ((DATA.rooms[room] || {})[roomType] || 0) * mult * people;
   var t1 = roomFee + cp1 + single + concept;
   var t2 = roomFee + cp2 + single + concept;
   var talk1 = '只今のお時間、' + DATA.courses[c1]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t1 + '円のものがおすすめですが、いかがなさいますか？';
