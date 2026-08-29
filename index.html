@@ -169,9 +169,6 @@
   }
 </style>
 </head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2b6cb0">
-<link rel="apple-touch-icon" href="icon-180.png">
 <body>
 <header>
   <h1>トーク内容生成</h1>
@@ -344,9 +341,9 @@ function calc(){
   var rr = DATA.rate[rateKey[band]][wd];
   var mult = isNum ? (parseFloat(timeVal) / 0.5) : 1;
   var roomFee = counts.reduce(function(s, ct, i){ return s + rr[i] * ct * mult; }, 0);
-  var cp1 = isNum ? DATA.courses[c1][timeVal] : DATA.courses[c1]['FT'];
-  var cp2 = isNum ? DATA.courses[c2][timeVal] : DATA.courses[c2]['FT'];
   var people = counts.reduce(function(a, b){ return a + b; }, 0);
+  var cp1 = (isNum ? DATA.courses[c1][timeVal] : DATA.courses[c1]['FT']) * people;
+  var cp2 = (isNum ? DATA.courses[c2][timeVal] : DATA.courses[c2]['FT']) * people;
   var single = people === 1 ? (DATA.hitori[label][band] || 0) * mult : 0;
   var roomType = band.indexOf('FT') >= 0 ? 'FT' : '時間制';
   var concept = ((DATA.rooms[room] || {})[roomType] || 0) * mult;
@@ -517,6 +514,5 @@ function fallbackCopy(text){
   document.getElementById('warnList').innerHTML = '<li>人数（区分ごとの人数）</li><li>利用時間</li><li>部屋番号</li><li>コース①</li>';
 })();
 </script>
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js");}</script>
 </body>
 </html>
