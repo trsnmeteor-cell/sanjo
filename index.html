@@ -253,6 +253,25 @@
 </div>
 
 <div class="card">
+  <h2><span class="tag">⚡</span>日時の指定（任意）</h2>
+  <div class="sub">空欄なら「現在の日時」で自動判定します。過去・未来の日時を指定して料金を確認できます</div>
+  <div class="grid2">
+    <div class="field">
+      <label for="fixdate">日付</label>
+      <input type="date" id="fixdate" aria-label="日付指定">
+    </div>
+    <div class="field">
+      <label for="fixtime">時刻</label>
+      <input type="time" id="fixtime" aria-label="時刻指定">
+    </div>
+  </div>
+  <div class="hint">例：祝日や平日の夜を指定して料金を確認できます。日付だけ・時刻だけの指定も可能です。深夜0〜5時を指定すると前日扱いになります（シートと同じルール）</div>
+  <div class="age-toggle">
+    <span class="chip" onclick="clearFix()">今の日時で判定（クリア）</span>
+  </div>
+</div>
+
+<div class="card">
   <h2><span class="tag">3</span>コース</h2>
   <div class="sub">おすすめ①と比較用②の2つを並べて表示します</div>
   <div class="grid2">
@@ -334,10 +353,21 @@ function calc(){
 
   var isNum = !isNaN(parseFloat(timeVal));
   var now = new Date();
+  var fixDate = document.getElementById('fixdate').value;
+  var fixTime = document.getElementById('fixtime').value;
   var d = new Date(now);
-  if (now.getHours() <= 5) d.setDate(d.getDate() - 1);
-  var label = dayLabel(d);
   var hour = now.getHours();
+  if (fixDate){
+    var fd = fixDate.split('-');
+    d = new Date(parseInt(fd[0],10), parseInt(fd[1],10)-1, parseInt(fd[2],10));
+  }
+  if (fixTime){
+    var ft = fixTime.split(':');
+    hour = parseInt(ft[0],10);
+  }
+  if (hour <= 5) d.setDate(d.getDate() - 1);
+  var label = dayLabel(d);
+  var dateStr = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
   var autoBand = bandFor(hour);
   var band = isNum ? (snMode === 'auto' ? autoBand : snMode) : timeVal;
   var wd = DATA.wday[label][band];
@@ -354,7 +384,7 @@ function calc(){
   var t2 = roomFee + cp2 + single + concept;
   var talk1 = '只今のお時間、' + DATA.courses[c1]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t1 + '円のものがおすすめですが、いかがなさいますか？';
   var talk2 = '只今のお時間、' + DATA.courses[c2]['説明'] + 'がおかわり自由にご利用いただけて、\nすべて合計で' + t2 + '円のものがおすすめですが、いかがなさいますか？';
-  return {counts:counts, timeVal:timeVal, room:room, c1:c1, c2:c2, band:band, wd:wd, label:label,
+  return {counts:counts, timeVal:timeVal, room:room, c1:c1, c2:c2, band:band, wd:wd, label:label, dateStr:dateStr,
           roomFee:roomFee, cp1:cp1, cp2:cp2, single:single, concept:concept, t1:t1, t2:t2, talk1:talk1, talk2:talk2};
 }
 
@@ -392,6 +422,12 @@ function resetAll(){
   document.getElementById('talk2').textContent = '—';
   document.getElementById('bd2').innerHTML = '—';
   document.getElementById('n2').textContent = '';
+}
+
+function clearFix(){
+  document.getElementById('fixdate').value = '';
+  document.getElementById('fixtime').value = '';
+  doCalc();
 }
 
 function doCalc(){
@@ -432,7 +468,7 @@ function doCalc(){
     return s.join('<br>') + '<span class="total">合計 ' + yen(t) + '円</span>';
   }
   document.getElementById('result').className = 'card result';
-  var metaText = '📅 判定：' + r.label + '（' + r.wd + '） ／ 🕐 時間帯：' + r.band + ' ／ 👥 人数：' + people + '名 ／ 🚪 部屋：' + r.room + '号室 ／ ⏱ 利用時間：' + r.timeVal;
+  var metaText = '📅 判定：' + r.label + '（' + r.wd + '） ／ 📆 日付：' + r.dateStr + ' ／ 🕐 時間帯：' + r.band + ' ／ 👥 人数：' + people + '名 ／ 🚪 部屋：' + r.room + '号室 ／ ⏱ 利用時間：' + r.timeVal;
   document.getElementById('resultMeta').textContent = metaText;
   document.getElementById('n1').textContent = r.c1;
   document.getElementById('n2').textContent = r.c2;
