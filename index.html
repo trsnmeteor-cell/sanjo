@@ -241,15 +241,6 @@
     <select id="room" aria-label="部屋番号"></select>
     <div class="hint">101〜515号室。部屋ごとに 時間制/FT のコンセプト料金が自動で加算されます</div>
   </div>
-  <div class="field">
-    <label for="snmode">時間帯の判定（上書きしたいとき）</label>
-    <select id="snmode" aria-label="SN判定">
-      <option value="auto">自動（現在の時刻で判定）</option>
-      <option value="S">S（昼気分の料金帯）に強制</option>
-      <option value="N">N（夜気分の料金帯）に強制</option>
-    </select>
-    <div class="hint">通常は「自動」のままでOK。深夜帯などで料金帯を手動で切り替えたいときに変更してください</div>
-  </div>
 </div>
 
 <div class="card">
@@ -261,11 +252,15 @@
       <input type="date" id="fixdate" aria-label="日付指定">
     </div>
     <div class="field">
-      <label for="fixtime">時刻</label>
-      <input type="time" id="fixtime" aria-label="時刻指定">
+      <label for="fixband">時間帯</label>
+      <select id="fixband" aria-label="時間帯指定">
+        <option value="">自動（現在時刻で判定）</option>
+        <option value="S">S（昼）</option>
+        <option value="N">N（夜）</option>
+      </select>
     </div>
   </div>
-  <div class="hint">例：祝日や平日の夜を指定して料金を確認できます。日付だけ・時刻だけの指定も可能です。深夜0〜5時を指定すると前日扱いになります（シートと同じルール）</div>
+  <div class="hint">時間帯は S（昼）／ N（夜）の2択。日付を指定するとその日の曜日・祝日で判定し、時間帯を「自動」にすると現在時刻で判定します</div>
   <div class="age-toggle">
     <span class="chip" onclick="clearFix()">今の日時で判定（クリア）</span>
   </div>
@@ -288,7 +283,7 @@
 </div>
 
 <div class="actions">
-  <button class="btn" id="calc">トーク内容を表示</button>
+  <button class="btn" id="calc">算出</button>
   <button class="btn secondary" id="reset" type="button">入力リセット</button>
 </div>
 
@@ -349,27 +344,29 @@ function calc(){
   var room = document.getElementById('room').value;
   var c1 = document.getElementById('cs1').value;
   var c2 = document.getElementById('cs2').value;
-  var snMode = document.getElementById('snmode').value;
 
   var isNum = !isNaN(parseFloat(timeVal));
   var now = new Date();
   var fixDate = document.getElementById('fixdate').value;
-  var fixTime = document.getElementById('fixtime').value;
+  var fixBand = document.getElementById('fixband').value;
   var d = new Date(now);
   var hour = now.getHours();
   if (fixDate){
     var fd = fixDate.split('-');
     d = new Date(parseInt(fd[0],10), parseInt(fd[1],10)-1, parseInt(fd[2],10));
   }
-  if (fixTime){
-    var ft = fixTime.split(':');
-    hour = parseInt(ft[0],10);
+  // 時間帯: FTコースはFT名自体が時間帯、それ以外はS/N指定→なければ現在時刻から自動判定
+  var band;
+  if (!isNum){
+    band = timeVal; // 昼FT〜ナイトパックはFT名がそのまま時間帯
+  } else if (fixBand === 'S' || fixBand === 'N'){
+    band = fixBand;
+  } else {
+    if (hour <= 5) d.setDate(d.getDate() - 1); // 深夜跨ぎは前日扱い（自動判定時のみ）
+    band = bandFor(hour);
   }
-  if (hour <= 5) d.setDate(d.getDate() - 1);
   var label = dayLabel(d);
   var dateStr = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
-  var autoBand = bandFor(hour);
-  var band = isNum ? (snMode === 'auto' ? autoBand : snMode) : timeVal;
   var wd = DATA.wday[label][band];
   var rr = DATA.rate[rateKey[band]][wd];
   var mult = isNum ? (parseFloat(timeVal) / 0.5) : 1;
@@ -396,23 +393,22 @@ function bump(i, delta){
   var v = parseInt(el.value,10) || 0;
   v = Math.max(0, Math.min(33, v + delta));
   el.value = v;
-  doCalc();
+  markStale();
 }
 function quickSet(arr){
   arr.forEach(function(v,i){ document.getElementById('c'+i).value = v; });
-  doCalc();
+  markStale();
 }
 function resetAll(){
   [0,1,2,3].forEach(function(i){ document.getElementById('c'+i).value = 0; });
   // セレクト類は初期値のまま
   document.getElementById('time').selectedIndex = 0;
   document.getElementById('room').selectedIndex = 0;
-  document.getElementById('snmode').value = 'auto';
   if (DATA.course_list.length > 0){
     document.getElementById('cs1').value = DATA.course_list[0];
     document.getElementById('cs2').value = DATA.course_list[1] || DATA.course_list[0];
   }
-  doCalc();
+  markStale();
   // 結果欄を空に
   document.getElementById('result').className = 'card result disabled';
   document.getElementById('resultMeta').textContent = 'まだ計算されていません';
@@ -426,8 +422,14 @@ function resetAll(){
 
 function clearFix(){
   document.getElementById('fixdate').value = '';
-  document.getElementById('fixtime').value = '';
-  doCalc();
+  document.getElementById('fixband').value = '';
+  markStale();
+}
+
+function markStale(){
+  var r0 = document.getElementById('result');
+  r0.className = 'card result disabled';
+  document.getElementById('resultMeta').textContent = '⚠️ 条件が変更されました。「算出」を押してください';
 }
 
 function doCalc(){
@@ -437,7 +439,6 @@ function doCalc(){
   var room = document.getElementById('room').value;
   var c1 = document.getElementById('cs1').value;
   var c2 = document.getElementById('cs2').value;
-  var snMode = document.getElementById('snmode').value;
 
   // 必須項目の未入力チェック
   var missing = [];
@@ -533,11 +534,11 @@ function fallbackCopy(text){
   });
   if (DATA.course_list.length > 1) s2.value = DATA.course_list[1];
 
-  // リアルタイム再計算
-  ['c0','c1','c2','c3','time','room','snmode','cs1','cs2'].forEach(function(id){
+  // 入力変更時は結果を「未算出」状態に戻す（算出ボタンで計算）
+  ['c0','c1','c2','c3','time','room','cs1','cs2','fixdate','fixband'].forEach(function(id){
     var el = document.getElementById(id);
-    el.addEventListener('change', doCalc);
-    el.addEventListener('input', doCalc);
+    el.addEventListener('change', markStale);
+    el.addEventListener('input', markStale);
   });
 
   document.getElementById('calc').addEventListener('click', doCalc);
